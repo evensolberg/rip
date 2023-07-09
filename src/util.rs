@@ -2,11 +2,7 @@
 fn join_absolute<A: AsRef<Path>, B: AsRef<Path>>(left: A, right: B) -> PathBuf {
     let (left, right) = (left.as_ref(), right.as_ref());
     left.join(
-        if let Ok(stripped) = right.strip_prefix("/") {
-            stripped
-        } else {
-            right
-        }
+        right.strip_prefix("/").map_or(right, |stripped| stripped)
     )
 }
 
@@ -27,31 +23,31 @@ fn prompt_yes<T: AsRef<str>>(prompt: T) -> bool {
     }
     let stdin = BufReader::new(io::stdin());
     stdin.bytes().next()
-        .and_then(|c| c.ok())
+        .and_then(std::result::Result::ok)
         .map(|c| c as char)
-        .map(|c| (c == 'y' || c == 'Y'))
-        .unwrap_or(false)
+        .map_or(false, |c| (c == 'y' || c == 'Y'))
 }
 
 /// Add a numbered extension to duplicate filenames to avoid overwriting files.
 fn rename_grave<G: AsRef<Path>>(grave: G) -> PathBuf {
     let grave = grave.as_ref();
     let name = grave.to_str().expect("Filename must be valid unicode.");
-    (1_u64..)
-        .map(|i| PathBuf::from(format!("{}~{}", name, i)))
+    (1..)
+        .map(|i| PathBuf::from(format!("{name}~{i}")))
         .find(|p| !symlink_exists(p))
         .expect("Failed to rename duplicate file or directory")
 }
 
+#[allow(clippy::cast_possible_truncation)]
 fn humanize_bytes(bytes: u64) -> String {
     let values = ["bytes", "KB", "MB", "GB", "TB"];
     let pair = values.iter()
         .enumerate()
-        .take_while(|x| bytes as usize / (1000 as usize).pow(x.0 as u32) > 10)
+        .take_while(|x| bytes as usize / 1000_usize.pow(x.0 as u32) > 10)
         .last();
     if let Some((i, unit)) = pair {
-        format!("{} {}", bytes as usize / (1000 as usize).pow(i as u32), unit)
+        format!("{} {unit}", bytes as usize / 1000_usize.pow(i as u32))
     } else {
-        format!("{} {}", bytes, values[0])
+        format!("{bytes} {}", values[0])
     }
 }

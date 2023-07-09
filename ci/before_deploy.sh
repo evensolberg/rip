@@ -30,7 +30,7 @@ mk_tarball() {
 # Package your artifacts in a .deb file
 # NOTE right now you can only package binaries using the `dobin` command. Simply call
 # `dobin [file..]` to include one or more binaries in your .deb package. I'll add more commands to
-# install other things like manpages (`doman`) as the needs arise.
+# install other things like manpages (`domain`) as the needs arise.
 # XXX This .deb packaging is minimal -- just to make your app installable via `dpkg` -- and doesn't
 # fully conform to Debian packaging guideliens (`lintian` raises a few warnings/errors)
 mk_deb() {
