@@ -6,8 +6,7 @@ extern crate error_chain;
 extern crate time;
 extern crate walkdir;
 
-use clap::parser::ValueSource;
-use clap::{Arg, ArgAction, Command};
+use clap::{Arg, ArgAction, Command, parser::ValueSource};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::os::unix::fs::{FileTypeExt, PermissionsExt};
 use std::path::{Path, PathBuf};
