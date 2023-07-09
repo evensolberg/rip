@@ -1,12 +1,8 @@
 #[macro_use]
-extern crate clap;
-extern crate core;
-#[macro_use]
 extern crate error_chain;
-extern crate time;
-extern crate walkdir;
 
-use clap::{parser::ValueSource, Arg, ArgAction, Command};
+use clap::{crate_authors, crate_version, parser::ValueSource, Arg, ArgAction, Command};
+// Stdlib imports
 use std::io::{BufRead, BufReader, Read, Write};
 use std::os::unix::fs::{FileTypeExt, PermissionsExt};
 use std::path::{Path, PathBuf};
@@ -17,25 +13,46 @@ mod errors {
 }
 use errors::{Result, ResultExt};
 
-include!("util.rs");
+// Local modules
+mod util;
+use crate::util::{humanize_bytes, prompt_yes};
+use util::{get_user, join_absolute, rename_grave, symlink_exists};
 
+// Constants
 #[cfg(target_os = "macos")]
+/// Default graveyard location on macOS.
 const GRAVEYARD: &str = "~/.Trash";
 
 #[cfg(not(target_os = "macos"))]
+/// Default graveyard location on Linux.
 const GRAVEYARD: &str = "/tmp/graveyard";
 
+/// Default record location.
 const RECORD: &str = ".record";
+
+/// Default number of lines to inspect in a file.
 const LINES_TO_INSPECT: usize = 6;
+
+/// Default number of files to inspect in a directory.
 const FILES_TO_INSPECT: usize = 6;
+
+/// Default number of bytes to inspect in a file.
 const BIG_FILE_THRESHOLD: u64 = 500_000_000; // 500 MB
 
+/// Contains the information for a single record item.
 struct RecordItem<'a> {
+    /// The time the item was deleted.
     _time: &'a str,
+
+    /// The original path of the item.
     orig: &'a Path,
+
+    /// The path of the item in the graveyard.
     dest: &'a Path,
 }
 
+/// The main program starting point. This calls the `run` function and handles
+/// any errors that may occur.
 fn main() {
     if let Err(ref e) = run() {
         let stderr = &mut ::std::io::stderr();
@@ -55,12 +72,15 @@ fn main() {
     }
 }
 
+/// This is the main program logic. It parses the command line arguments and
+/// then calls the appropriate functions to handle the user's request.
 fn run() -> Result<()> {
-    let matches = generate_cli_and_get_matches(GRAVEYARD).get_matches();
-    let confirmed = matches.value_source("confirm") == Some(ValueSource::CommandLine);
+    let cli_args = generate_cli_and_get_args(GRAVEYARD).get_matches();
+    let confirmed = cli_args.value_source("confirm") == Some(ValueSource::CommandLine);
 
+    // Get the graveyard path
     let graveyard: &PathBuf = &{
-        matches.get_one::<String>("graveyard").map_or_else(
+        cli_args.get_one::<String>("graveyard").map_or_else(
             || {
                 env::var("GRAVEYARD").map_or_else(
                     |_| {
@@ -83,7 +103,8 @@ fn run() -> Result<()> {
     }
     .into();
 
-    if matches.value_source("decompose") == Some(ValueSource::CommandLine) {
+    // Remove the graveyard if the user passed -d
+    if cli_args.value_source("decompose") == Some(ValueSource::CommandLine) {
         if prompt_yes("Really unlink the entire graveyard?") || confirmed {
             fs::remove_dir_all(graveyard).chain_err(|| "Couldn't unlink graveyard")?;
         }
@@ -93,7 +114,8 @@ fn run() -> Result<()> {
     let record: &Path = &graveyard.join(RECORD);
     let cwd: PathBuf = env::current_dir().chain_err(|| "Failed to get current dir")?;
 
-    if let Some(t) = matches.get_many::<String>("unbury") {
+    // Undelte the last deleted file if -u is passed
+    if let Some(t) = cli_args.get_many::<String>("unbury") {
         // Vector to hold the grave path of items we want to unbury.
         // This will be used to determine which items to remove from the
         // record following the unbury.
@@ -102,7 +124,7 @@ fn run() -> Result<()> {
 
         // If -s is also passed, push all files found by seance onto
         // the graves_to_exhume.
-        if matches.value_source("seance") == Some(ValueSource::CommandLine) {
+        if cli_args.value_source("seance") == Some(ValueSource::CommandLine) {
             if let Ok(f) = fs::File::open(record) {
                 let gravepath = join_absolute(graveyard, cwd).to_string_lossy().into_owned();
                 for grave in seance(f, gravepath) {
@@ -148,7 +170,7 @@ fn run() -> Result<()> {
         return Ok(());
     }
 
-    if matches.value_source("seance") == Some(ValueSource::CommandLine) {
+    if cli_args.value_source("seance") == Some(ValueSource::CommandLine) {
         let gravepath = join_absolute(graveyard, cwd);
         let f = fs::File::open(record).chain_err(|| "Failed to read record")?;
         for grave in seance(f, gravepath.to_string_lossy()) {
@@ -157,7 +179,7 @@ fn run() -> Result<()> {
         return Ok(());
     }
 
-    if let Some(targets) = matches.get_many::<String>("TARGET") {
+    if let Some(targets) = cli_args.get_many::<String>("TARGET") {
         for target in targets {
             // Check if source exists
             if let Ok(metadata) = fs::symlink_metadata(target) {
@@ -170,7 +192,7 @@ fn run() -> Result<()> {
                         .chain_err(|| "Failed to canonicalize path")?
                 };
 
-                if matches.value_source("inspect") == Some(ValueSource::CommandLine) {
+                if cli_args.value_source("inspect") == Some(ValueSource::CommandLine) {
                     if metadata.is_dir() {
                         // Get the size of the directory and all its contents
                         println!(
@@ -258,7 +280,7 @@ fn run() -> Result<()> {
     } else {
         println!(
             "{:#?}\nrip -h for help",
-            matches.get_many::<String>("TARGET")
+            cli_args.get_many::<String>("TARGET")
         );
     }
 
@@ -475,7 +497,7 @@ fn delete_lines_from_record<R: AsRef<Path>>(
 }
 
 /// Generates the CLI
-fn generate_cli_and_get_matches(graveyard: &str) -> Command {
+fn generate_cli_and_get_args(graveyard: &str) -> Command {
     let gy = format!(
         "Rm ImProved\nSend files to the graveyard ({graveyard} by default) instead of unlinking them."
     );
