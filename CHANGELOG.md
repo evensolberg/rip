@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### Doc
+
+- Changelog
+
 ### Feat
 
 - Add -y parameter and macOS default location
