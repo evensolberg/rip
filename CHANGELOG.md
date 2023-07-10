@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### Chore
+
+- Minor updates
+- Clean up the code
+
 ### Doc
 
 - Changelog

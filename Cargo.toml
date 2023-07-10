@@ -1,11 +1,11 @@
 [package]
 edition = '2018'
 name = "rm-improved"
-version = "0.14.1"
+version = "0.14.2"
 authors = ["mail@nivekuil.com", "even.solberg@gmail.com"]
 description = "rip: a safe and ergonomic alternative to rm"
-repository = "https://github.com/nivekuil/rip"
-readme = "README.org"
+repository = "https://github.com/evensolberg/rip"
+readme = "README.md"
 license = "GPL-3.0+"
 include = [
     "**/*.rs",
@@ -15,9 +15,9 @@ categories = ["command-line-utilities"]
 autobins = false
 
 [dependencies]
-clap = { version = "4.3.3", features = ["cargo", "wrap_help"] }
+clap = { version = "4.3.11", features = ["cargo", "wrap_help"] }
 walkdir = "2.3.3"
-time = { version = "0.3.22", features = ["local-offset", "formatting"] }
+time = { version = "0.3.23", features = ["local-offset", "formatting"] }
 error-chain = "0.12"
 
 [profile.release]
@@ -37,7 +37,7 @@ path = "src/main.rs"
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.0.7"
 # The preferred Rust toolchain to use in CI (rustup toolchain syntax)
-rust-toolchain-version = "1.67.1"
+rust-toolchain-version = "1.70.0"
 # CI backends to support (see 'cargo dist generate-ci')
 ci = ["github"]
 # The installers to generate for each app

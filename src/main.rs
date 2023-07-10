@@ -1,17 +1,19 @@
 #[macro_use]
 extern crate error_chain;
 
-use clap::{crate_authors, crate_version, parser::ValueSource, Arg, ArgAction, Command};
 // Stdlib imports
+use errors::{Result, ResultExt};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::os::unix::fs::{FileTypeExt, PermissionsExt};
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
+
+// External imports
+use clap::{crate_authors, crate_version, parser::ValueSource, Arg, ArgAction, Command};
 use walkdir::WalkDir;
 mod errors {
     error_chain! {}
 }
-use errors::{Result, ResultExt};
 
 // Local modules
 mod util;
@@ -235,7 +237,8 @@ fn run() -> Result<()> {
                             },
                         );
                     }
-                    if !prompt_yes(format!("Send {target} to the graveyard?")) || confirmed {
+
+                    if !confirmed || !prompt_yes(format!("Send {target} to the graveyard?")) {
                         continue;
                     }
                 }
@@ -552,7 +555,7 @@ fn generate_cli_and_get_args(graveyard: &str) -> Command {
         )
         .arg(
             Arg::new("confirm")
-                .help("Auto-confirm any prompts")
+                .help("Auto-confirm any prompts.")
                 .short('y')
                 .long("yes-to-all")
                 .num_args(0)
@@ -560,7 +563,7 @@ fn generate_cli_and_get_args(graveyard: &str) -> Command {
         )
         .arg(
             Arg::new("inspect")
-                .help("Prints some info about TARGET before prompting for action")
+                .help("Prints some info about TARGET before prompting for action.")
                 .short('i')
                 .long("inspect")
                 .num_args(0)
