@@ -17,6 +17,10 @@ All notable changes to this project will be documented in this file.
 
 - Add -y parameter and macOS default location
 
+### Fix
+
+- `-y` option not working properly
+
 ### [Fix]
 
 - Use $XDG_DATA_HOME/graveyard instead of $XDG_DATA_HOME/tmp/graveyard

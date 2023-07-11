@@ -238,7 +238,9 @@ fn run() -> Result<()> {
                         );
                     }
 
-                    if !confirmed || !prompt_yes(format!("Send {target} to the graveyard?")) {
+                    // If there is no --yes-to-all flag, prompt to continue and if the user says no,
+                    
+                    if !confirmed && !prompt_yes(format!("Send {target} to the graveyard?")) {
                         continue;
                     }
                 }
