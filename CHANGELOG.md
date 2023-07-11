@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 ### Fix
 
 - `-y` option not working properly
+- Send to graveyard prompt. Hopefully
 
 ### [Fix]
 
