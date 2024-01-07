@@ -1,11 +1,11 @@
 [package]
 edition = '2018'
 name = "rm-improved"
-version = "0.13.1"
-authors = ["mail@nivekuil.com"]
+version = "0.14.3"
+authors = ["mail@nivekuil.com", "even.solberg@gmail.com"]
 description = "rip: a safe and ergonomic alternative to rm"
-repository = "https://github.com/nivekuil/rip"
-readme = "README.org"
+repository = "https://github.com/evensolberg/rip"
+readme = "README.md"
 license = "GPL-3.0+"
 include = [
     "**/*.rs",
@@ -15,14 +15,32 @@ categories = ["command-line-utilities"]
 autobins = false
 
 [dependencies]
-clap = "2"
-walkdir = "1"
-time = "0.1"
+clap = { version = "4.3.11", features = ["cargo", "wrap_help"] }
+walkdir = "2.3.3"
+time = { version = "0.3.23", features = ["local-offset", "formatting"] }
 error-chain = "0.12"
 
 [profile.release]
 opt-level = "s"
 
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
 [[bin]]
 name = "rip"
 path = "src/main.rs"
+
+# Config for 'cargo dist'
+[workspace.metadata.dist]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.0.7"
+# The preferred Rust toolchain to use in CI (rustup toolchain syntax)
+rust-toolchain-version = "1.70.0"
+# CI backends to support (see 'cargo dist generate-ci')
+ci = ["github"]
+# The installers to generate for each app
+installers = ["shell"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
